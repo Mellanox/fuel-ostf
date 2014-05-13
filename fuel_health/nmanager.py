@@ -252,13 +252,30 @@ class OfficialClientTest(fuel_health.test.TestCase):
         try:
             flavor = cls.compute_client.flavors.create(
                 name, 64, 1, 1, flavorid)
+            LOG.debug("Building cirros flavor.")
+        except Exception:
+            LOG.debug("OSTF test flavor cannot be created.")
+            LOG.debug(traceback.format_exc())
+        return flavor
+
+    @classmethod
+    def _create_mellanox_flavor(cls):
+        name = rand_name('ost1_test-flavor-mellanox')
+        flavorid = rand_int_id(999, 10000)
+        try:
+            flavor = cls.compute_client.flavors.create(
+                name, 4096, 2, 40, flavorid)
+            LOG.debug("Building mellanox flavor.")
         except Exception:
             LOG.debug("OSTF test flavor cannot be created.")
             LOG.debug(traceback.format_exc())
         return flavor
 
     def get_image_from_name(self):
-        image_name = self.manager.config.compute.image_name
+        if self.manager.config.compute.use_mellanox:
+          image_name = self.manager.config.compute.mellanox_image_name
+        else:
+          image_name = self.manager.config.compute.image_name
         images = self.compute_client.images.list()
         image_id = ''
         LOG.debug(images)
@@ -377,6 +394,12 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             cls.host = cls.config.compute.controller_nodes
             cls.usr = cls.config.compute.controller_node_ssh_user
             cls.pwd = cls.config.compute.controller_node_ssh_password
+            if cls.config.compute.use_mellanox:
+              cls.vm_user = cls.config.compute.mellanox_image_user
+              cls.vm_pwd = cls.config.compute.mellanox_image_password
+            else:
+              cls.vm_user = 'cirros'
+              cls.vm_pwd  = 'cubswin:)'
             cls.key = cls.config.compute.path_to_private_key
             cls.timeout = cls.config.compute.ssh_timeout
             cls.tenant_id = cls.manager._get_identity_client(
@@ -583,8 +606,8 @@ class NovaNetworkScenarioTest(OfficialClientTest):
             return self.retry_command(retries[0], retries[1],
                                       ssh.exec_command_on_vm,
                                       command=command,
-                                      user='cirros',
-                                      password='cubswin:)',
+                                      user=self.vm_user,
+                                      password=self.vm_pwd,
                                       vm=ip_address)
 
         # TODO Allow configuration of execution and sleep duration.

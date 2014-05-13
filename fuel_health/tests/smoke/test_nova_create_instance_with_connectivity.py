@@ -38,7 +38,12 @@ class TestNovaNetwork(nmanager.NovaNetworkScenarioTest):
     def setUpClass(cls):
         super(TestNovaNetwork, cls).setUpClass()
         if cls.manager.clients_initialized:
-            cls.nova_netw_flavor = cls._create_nano_flavor()
+            if cls.config.compute.use_mellanox:
+              LOG.info("creating mellanox flavor")
+              cls.nova_netw_flavor = cls._create_mellanox_flavor()
+            else:
+              LOG.info("creating cirros nano flavor")
+              cls.nova_netw_flavor = cls._create_nano_flavor()
             cls.tenant_id = cls.manager._get_identity_client(
                 cls.config.identity.admin_username,
                 cls.config.identity.admin_password,

@@ -28,7 +28,12 @@ class VolumesTest(nmanager.SmokeChecksTest):
     def setUpClass(cls):
         super(VolumesTest, cls).setUpClass()
         if cls.manager.clients_initialized:
-            cls.smoke_flavor = cls._create_nano_flavor()
+            if cls.config.compute.use_mellanox:
+              LOG.info("creating mellanox flavor")
+              cls.smoke_flavor = cls._create_mellanox_flavor()
+            else:
+              LOG.info("creating cirros nano flavor")
+              cls.smoke_flavor = cls._create_nano_flavor()
 
     def setUp(self):
         super(VolumesTest, self).setUp()

@@ -159,6 +159,15 @@ ComputeGroup = [
     cfg.StrOpt('image_name',
                default="TestVM",
                help="Valid secondary image reference to be used in tests."),
+    cfg.StrOpt('mellanox_image_name',
+               default="MlnxVM",
+               help="Valid mellanox image reference to be used in tests."),
+    cfg.StrOpt('mellanox_image_user',
+               default="root",
+               help="User name to use in for mellanox VMs."),
+    cfg.StrOpt('mellanox_image_password',
+               default="password",
+               help="Password to use in for mellanox VMs."),
     cfg.StrOpt('deployment_mode',
                default="ha",
                help="Deployments mode"),
@@ -419,7 +428,6 @@ class FileConfig(object):
             print >> sys.stderr, RuntimeError(msg)
         else:
             config_files.append(path)
-
         cfg.CONF([], project='fuel', default_config_files=config_files)
 
         register_compute_opts(cfg.CONF)
@@ -516,6 +524,9 @@ class NailgunConfig(object):
         data = response.json()
         LOG.info('RESPONSE FROM %s - %s' % (api_url, data))
         access_data = data['editable']['access']
+        use_mellanox = data['editable']['additional_components']['neutron-mellanox']['value'] != 'disabled'
+        LOG.info('using mellanox %s' % use_mellanox)
+        self.compute.use_mellanox = use_mellanox
         self.identity.admin_tenant_name = access_data['tenant']['value']
         self.identity.admin_username = access_data['user']['value']
         self.identity.admin_password = access_data['password']['value']
